@@ -42,7 +42,9 @@
     "webpack-dev-server": "^1.12.1"
   },
   "dependencies": {
+    "d3": "^3.5.17",
     "react": "^0.14.6",
+    "react-addons-transition-group": "^0.14.3",
     "react-dom": "^0.14.6"
   }
 }
