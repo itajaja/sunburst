@@ -21,13 +21,13 @@ function extend(Class, method, extension) {
 
 function _componentDidMount() {
   this.d3Node = d3.select(findDOMNode(this))
-  this.d3Node.datum(this.props.d)
+  this.d3Node
     .call((selection) => this.onD3Enter(selection))
     .call((selection) => this.onD3Update(selection))
 }
 
 function _componentDidUpdate() {
-  this.d3Node.datum(this.props.d)
+  this.d3Node
     .call((selection) => this.onD3Update(selection))
 }
 
