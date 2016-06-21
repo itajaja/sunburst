@@ -43,6 +43,8 @@
   },
   "dependencies": {
     "d3": "^3.5.17",
+    "d3-hierarchy": "^0.3.0",
+    "raw-loader": "^0.5.1",
     "react": "^0.14.6",
     "react-addons-transition-group": "^0.14.3",
     "react-dom": "^0.14.6"
