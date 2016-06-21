@@ -28,9 +28,6 @@ class Sunburst extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     this.setState(this.prepareState(nextProps, this.state.data))
-    setTimeout(
-      () => this.setState(this.prepareState(nextProps)), 1
-    )
   }
 
   onD3Update(selection) {
