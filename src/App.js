@@ -1,86 +1,108 @@
-import React from 'react'
+import { stratify } from 'd3-hierarchy';
+import React from 'react';
+import { spring, TransitionMotion } from 'react-motion';
 
-import Sunburst from './Sunburst'
-import Svg from './Svg'
+import Sunburst from './Sunburst';
 
-import d0 from './data/data_0.1.report.summary.kraken'
-import d1 from './data/data_0.2.report.summary.kraken'
-import d2 from './data/data_0.3.report.summary.kraken'
-import d3 from './data/data_0.4.report.summary.kraken'
-import d4 from './data/data_0.5.report.summary.kraken'
-import d5 from './data/data_0.6.report.summary.kraken'
-import d6 from './data/data_0.7.report.summary.kraken'
-import d7 from './data/data_0.8.report.summary.kraken'
-import d8 from './data/data_0.9.report.summary.kraken'
-import d9 from './data/data_1.0.report.summary.kraken'
-import parseTaxonomy from './parseTaxonomy'
+import d0 from './data/data_0.1.report.summary.kraken';
+import d1 from './data/data_0.2.report.summary.kraken';
+import d2 from './data/data_0.3.report.summary.kraken';
+import d3 from './data/data_0.4.report.summary.kraken';
+import d4 from './data/data_0.5.report.summary.kraken';
+import d5 from './data/data_0.6.report.summary.kraken';
+import d6 from './data/data_0.7.report.summary.kraken';
+import d7 from './data/data_0.8.report.summary.kraken';
+import d8 from './data/data_0.9.report.summary.kraken';
+import d9 from './data/data_1.0.report.summary.kraken';
 
-const dataList = [d9, d0, d1, d2, d3, d4, d5, d6, d7, d8]
+const DATASETS = [d9, d0, d1, d2, d3, d4, d5, d6, d7, d8];
+const ROOT = '@@root';
 
-const valueFuncs = [
-  ({ numReads }) => numReads,
-  ({ children }) => children ? 0 : 1,
-]
+const stratifier = stratify()
+  .parentId(({ id }) => (
+    id === ROOT ? null : id.substring(0, id.lastIndexOf(';')) || ROOT
+  ));
 
 export default class App extends React.Component {
   state = {
-    dataIndex: 0,
-    valueFunc: 0,
-  }
+    datasetIndex: 0,
+    useHasReads: false,
+  };
 
-  onToggleSize = () => {
-    const { valueFunc } = this.state
-    this.setState({ valueFunc: (valueFunc + 1) % valueFuncs.length })
-  }
+  onClickChangeDataset = () => {
+    this.setState({
+      datasetIndex: (this.state.datasetIndex + 1) % DATASETS.length,
+    });
+  };
 
-  onSliceClick = root => {
-    this.setState({ root })
-  }
+  onClickChangeMeasure = () => {
+    this.setState({ useHasReads: !this.state.useHasReads });
+  };
 
-  onChangeDataset = () => {
-    this.setState({ dataIndex: (this.state.dataIndex + 1) % dataList.length })
-  }
+  getData() {
+    const { datasetIndex, useHasReads } = this.state;
+    const dataset = DATASETS[datasetIndex];
 
-  onToggleJagged = () => {
-    this.setState({ jagged: !this.state.jagged })
-  }
+    const datasetParsed = dataset.map(([numReads, key, id]) => ({
+      id,
+      key: parseInt(key, 10),
+      numReads: parseInt(numReads, 10),
+    }));
 
-  // componentDidMount() {
-  //   setInterval(() => {
-  //     this.setState({
-  //       data: d3.range(Math.random() * 300).map(() => Math.random() * 200),
-  //     })
-  //   }, 1500)
-  // }
+    datasetParsed.push({ id: ROOT, key: -1, numReads: 0 });
+
+    const root = stratifier(datasetParsed)
+      .sort((a, b) => (b.data.key - a.data.key))
+      .sum(useHasReads ?
+        ({ numReads }) => Number(numReads > 0) :
+        ({ numReads }) => numReads
+      );
+
+    const nodes = root.descendants().map(({ id, data, parent, value }) => ({
+      id,
+      key: data.key,
+      parentId: parent && parent.id,
+      value,
+    }));
+
+    return { nodes, height: root.height };
+  }
 
   render() {
-    const { valueFunc, dataIndex, root, jagged } = this.state
+    const { nodes } = this.getData();
+
     return (
       <div>
-        <button onClick={this.onToggleSize}>
-          toggle measure
+        <button onClick={this.onClickChangeDataset}>
+          Change dataset
         </button>
-        <button onClick={this.onChangeDataset}>
-          change dataset
+        <button onClick={this.onClickChangeMeasure}>
+          Change measure
         </button>
-        <button onClick={() => this.onSliceClick()}>
-          reset root
-        </button>
-        <button onClick={this.onToggleJagged}>
-          toggle jagged
-        </button>
-        <Svg width={960} height={700}>
-          <Sunburst
-            data={parseTaxonomy(dataList[dataIndex])}
-            width={960}
-            height={700}
-            valueFunc={valueFuncs[valueFunc]}
-            onSliceClick={this.onSliceClick}
-            root={root}
-            jagged={jagged}
-          />
-        </Svg>
+
+        <svg width={960} height={700}>
+          <TransitionMotion
+            styles={nodes.map(node => ({
+              key: node.key.toString(),
+              data: node,
+              style: { value: spring(node.value) },
+            }))}
+            willLeave={() => ({ value: spring(0) })}
+            willEnter={() => ({ value: 0 })}
+          >
+            {styles => (
+              <Sunburst
+                nodes={styles.map(({ data, style }) => ({
+                  ...data,
+                  ...style,
+                }))}
+                width={960}
+                height={700}
+              />
+            )}
+          </TransitionMotion>
+        </svg>
       </div>
-    )
+    );
   }
 }
