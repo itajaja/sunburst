@@ -16,11 +16,13 @@ import d8 from './data/data_0.9.report.summary.kraken';
 import d9 from './data/data_1.0.report.summary.kraken';
 
 const DATASETS = [d9, d0, d1, d2, d3, d4, d5, d6, d7, d8];
-const ROOT = '@@root';
+
+const ROOT_ID = '@@root';
+const PLOT_KEY = '@@plot';
 
 const stratifier = stratify()
   .parentId(({ id }) => (
-    id === ROOT ? null : id.substring(0, id.lastIndexOf(';')) || ROOT
+    id === ROOT_ID ? null : id.substring(0, id.lastIndexOf(';')) || ROOT_ID
   ));
 
 export default class App extends React.Component {
@@ -49,28 +51,78 @@ export default class App extends React.Component {
       numReads: parseInt(numReads, 10),
     }));
 
-    datasetParsed.push({ id: ROOT, key: -1, numReads: 0 });
+    let getValue;
+
+    if (useHasReads) {
+      let totalNumReads = 0;
+      let numTaxaWithReads = 0;
+
+      datasetParsed.forEach(({ numReads }) => {
+        if (numReads > 0) {
+          totalNumReads += numReads;
+          ++numTaxaWithReads;
+        }
+      });
+
+      const meanNumReads = numTaxaWithReads ?
+        totalNumReads / numTaxaWithReads : 1;
+
+      getValue = ({ numReads }) => (numReads > 0 ? meanNumReads : 0);
+    } else {
+      getValue = ({ numReads }) => numReads;
+    }
+
+    datasetParsed.push({ id: ROOT_ID, key: -1, numReads: 0 });
 
     const root = stratifier(datasetParsed)
       .sort((a, b) => (b.data.key - a.data.key))
-      .sum(useHasReads ?
-        ({ numReads }) => Number(numReads > 0) :
-        ({ numReads }) => numReads
-      );
+      .sum(getValue);
 
-    const nodes = root.descendants().map(({ id, data, parent, value }) => ({
-      id,
-      key: data.key,
-      parentId: parent && parent.id,
-      value,
-    }));
+    const nodes = root.descendants()
+      .map(({ id, data, parent, value }) => ({
+        id,
+        key: data.key,
+        parentId: parent && parent.id,
+        value,
+      }));
 
-    return { nodes, height: root.height };
+    return { nodes, maxDepth: root.height };
   }
 
-  render() {
-    const { nodes } = this.getData();
+  getStyles() {
+    const { nodes, maxDepth } = this.getData();
 
+    const styles = nodes.map(node => ({
+      key: node.key.toString(),
+      data: node,
+      style: { value: spring(node.value) },
+    }));
+
+    styles.push({
+      key: PLOT_KEY,
+      style: { maxDepth: spring(maxDepth) },
+    });
+
+    return styles;
+  }
+
+  renderStyles = (styles) => {
+    const { maxDepth } = styles.pop().style;
+
+    return (
+      <Sunburst
+        nodes={styles.map(({ data, style }) => ({
+          ...data,
+          ...style,
+        }))}
+        maxDepth={maxDepth}
+        width={960}
+        height={700}
+      />
+    );
+  };
+
+  render() {
     return (
       <div>
         <button onClick={this.onClickChangeDataset}>
@@ -82,24 +134,11 @@ export default class App extends React.Component {
 
         <svg width={960} height={700}>
           <TransitionMotion
-            styles={nodes.map(node => ({
-              key: node.key.toString(),
-              data: node,
-              style: { value: spring(node.value) },
-            }))}
+            styles={this.getStyles()}
             willLeave={() => ({ value: spring(0) })}
             willEnter={() => ({ value: 0 })}
           >
-            {styles => (
-              <Sunburst
-                nodes={styles.map(({ data, style }) => ({
-                  ...data,
-                  ...style,
-                }))}
-                width={960}
-                height={700}
-              />
-            )}
+            {this.renderStyles}
           </TransitionMotion>
         </svg>
       </div>

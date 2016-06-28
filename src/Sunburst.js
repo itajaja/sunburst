@@ -7,6 +7,7 @@ import Arc from './Arc';
 export default class Sunburst extends React.Component {
   static propTypes = {
     nodes: React.PropTypes.array.isRequired,
+    maxDepth: React.PropTypes.number.isRequired,
     height: React.PropTypes.number.isRequired,
     width: React.PropTypes.number.isRequired,
   };
@@ -31,11 +32,13 @@ export default class Sunburst extends React.Component {
   }
 
   render() {
-    const { nodes, height, width } = this.props;
+    const { nodes, maxDepth, height, width } = this.props;
     const layout = this.getLayout(nodes);
 
     const radius = Math.min(width, height) / 2;
-    this.rScale.range([0, radius]);
+    this.rScale
+      .domain([0, maxDepth + 1])
+      .range([0, radius]);
 
     return (
       <g transform={`translate(${0.5 * width},${0.5 * height})`}>
