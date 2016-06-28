@@ -74,6 +74,9 @@ export default class App extends React.Component {
 
     datasetParsed.push({ id: ROOT_ID, key: -1, numReads: 0 });
 
+    // We need to stratify and sum before applying the transition to ensure
+    // that parents don't transition out before their children do, especially
+    // for zero-read parents.
     const root = stratifier(datasetParsed)
       .sort((a, b) => (b.data.key - a.data.key))
       .sum(getValue);
