@@ -54,6 +54,7 @@ export default class App extends React.Component {
     let getValue;
 
     if (useHasReads) {
+      // The spring behavior is a bit odd if I use 1 as the value here.
       let totalNumReads = 0;
       let numTaxaWithReads = 0;
 
