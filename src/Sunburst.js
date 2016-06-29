@@ -1,8 +1,9 @@
 import { partition, stratify } from 'd3-hierarchy';
-import { scaleOrdinal, scaleSqrt, schemeCategory20b } from 'd3-scale';
+import { scaleLinear, scaleOrdinal, scaleSqrt, schemeCategory20b }
+  from 'd3-scale';
 import React from 'react';
 
-import Arc from './Arc';
+import SunburstSlice from './SunburstSlice';
 
 export default class Sunburst extends React.Component {
   static propTypes = {
@@ -15,44 +16,43 @@ export default class Sunburst extends React.Component {
   constructor(props, context) {
     super(props, context);
 
-    this.rScale = scaleSqrt().domain([0, 20]);
-    this.colorScale = scaleOrdinal(schemeCategory20b);
+    this.radiusScale = scaleSqrt();
+    this.angleScale = scaleLinear().range([0, 2 * Math.PI]);
+
+    this.fillScale = scaleOrdinal(schemeCategory20b);
   }
 
-  getLayout(nodes) {
+  getRoot(nodes) {
     const root = stratify()(nodes);
     root.each(node => {
       node.value = node.data.value; // eslint-disable-line no-param-reassign
     });
 
-    const partitioner = partition()
-      .size([2 * Math.PI, 1]);
-
-    return partitioner(root).descendants();
+    return partition()(root);
   }
 
   render() {
     const { nodes, maxDepth, height, width } = this.props;
-    const layout = this.getLayout(nodes);
-
+    const root = this.getRoot(nodes);
     const radius = Math.min(width, height) / 2;
-    this.rScale
-      .domain([0, maxDepth + 1])
-      .range([0, radius]);
+
+    const { radiusScale, angleScale, fillScale } = this;
+    radiusScale.domain([0, maxDepth + 1]).range([0, radius]);
+
+    root.each(({ data }) => {
+      // Evaluate the fill color in breadth-first fashion to ensure that
+      // adjacent slices have different fill colors.
+      fillScale(data.key);
+    });
 
     return (
       <g transform={`translate(${0.5 * width},${0.5 * height})`}>
-        {layout.map(({ x0, x1, depth, data }) => (
-          <Arc
-            key={data.key}
-            innerRadius={this.rScale(depth)}
-            outerRadius={this.rScale(depth + 1)}
-            startAngle={x0}
-            endAngle={x1}
-            fill={this.colorScale(data.key)}
-            stroke="white"
-          />
-        ))}
+        <SunburstSlice
+          radiusScale={radiusScale}
+          angleScale={angleScale}
+          fillScale={fillScale}
+          node={root}
+        />
       </g>
     );
   }
