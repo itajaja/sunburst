@@ -138,12 +138,12 @@ export default class App extends React.Component {
         fade,
       }));
 
-    return { nodes };
+    return { nodes, maxDepth: Math.min(root.height, this.state.maxDepth) };
   }
 
   getStyles = (prevInterpolatedStyles) => {
-    const { jagged, activeNode, maxDepth } = this.state;
-    const { nodes } = this.getData();
+    const { jagged, activeNode } = this.state;
+    const { nodes, maxDepth } = this.getData();
 
     const styles = nodes.map(node => ({
       key: node.key.toString(),
