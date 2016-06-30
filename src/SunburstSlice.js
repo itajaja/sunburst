@@ -16,9 +16,15 @@ function SunburstSlice({ radiusScale, angleScale, fillScale, node, jagged }) {
   // We could also transition an outer radius floor for the entire diagram,
   // to keep the boundary of the smooth edge as a circle, rather than having
   // each slice animate semi-independently.
-  const maxRadius = radiusScale.range()[1];
-  const outerRadius =
-    maxRadius + jagged * (radiusScale(depth + 1) - maxRadius);
+  let outerRadius;
+  if (jagged === 0) {
+    outerRadius = radiusScale.range()[1];
+  } else if (jagged === 1) {
+    outerRadius = radiusScale(depth + 1);
+  } else {
+    const maxRadius = radiusScale.range()[1];
+    outerRadius = maxRadius + jagged * (radiusScale(depth + 1) - maxRadius);
+  }
 
   const arc = (
     <Arc
