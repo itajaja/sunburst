@@ -9,6 +9,7 @@ export default class Sunburst extends React.Component {
   static propTypes = {
     nodes: React.PropTypes.array.isRequired,
     maxDepth: React.PropTypes.number.isRequired,
+    jagged: React.PropTypes.number.isRequired,
     height: React.PropTypes.number.isRequired,
     width: React.PropTypes.number.isRequired,
   };
@@ -32,7 +33,7 @@ export default class Sunburst extends React.Component {
   }
 
   render() {
-    const { nodes, maxDepth, height, width } = this.props;
+    const { nodes, maxDepth, jagged, height, width } = this.props;
     const root = this.getRoot(nodes);
     const radius = Math.min(width, height) / 2;
 
@@ -52,6 +53,7 @@ export default class Sunburst extends React.Component {
           angleScale={angleScale}
           fillScale={fillScale}
           node={root}
+          jagged={jagged}
         />
       </g>
     );

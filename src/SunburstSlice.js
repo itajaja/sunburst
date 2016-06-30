@@ -7,15 +7,23 @@ const propTypes = {
   angleScale: React.PropTypes.func.isRequired,
   fillScale: React.PropTypes.func.isRequired,
   node: React.PropTypes.object.isRequired,
+  jagged: React.PropTypes.number.isRequired,
 };
 
-function SunburstSlice({ radiusScale, angleScale, fillScale, node }) {
+function SunburstSlice({ radiusScale, angleScale, fillScale, node, jagged }) {
   const { x0, x1, depth, data, children } = node;
+
+  // We could also transition an outer radius floor for the entire diagram,
+  // to keep the boundary of the smooth edge as a circle, rather than having
+  // each slice animate semi-independently.
+  const maxRadius = radiusScale.range()[1];
+  const outerRadius =
+    maxRadius + jagged * (radiusScale(depth + 1) - maxRadius);
 
   const arc = (
     <Arc
       innerRadius={radiusScale(depth)}
-      outerRadius={radiusScale(depth + 1)}
+      outerRadius={outerRadius}
       startAngle={angleScale(x0)}
       endAngle={angleScale(x1)}
       fill={fillScale(data.key)}
@@ -38,6 +46,7 @@ function SunburstSlice({ radiusScale, angleScale, fillScale, node }) {
           angleScale={angleScale}
           fillScale={fillScale}
           node={child}
+          jagged={jagged}
         />
       ))}
     </g>

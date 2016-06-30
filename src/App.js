@@ -29,6 +29,7 @@ export default class App extends React.Component {
   state = {
     datasetIndex: 0,
     useHasReads: false,
+    jagged: false,
   };
 
   onClickChangeDataset = () => {
@@ -39,6 +40,10 @@ export default class App extends React.Component {
 
   onClickChangeMeasure = () => {
     this.setState({ useHasReads: !this.state.useHasReads });
+  };
+
+  onClickToggleJagged = () => {
+    this.setState({ jagged: !this.state.jagged });
   };
 
   getData() {
@@ -104,14 +109,17 @@ export default class App extends React.Component {
 
     styles.push({
       key: PLOT_KEY,
-      style: { maxDepth: spring(maxDepth) },
+      style: {
+        maxDepth: spring(maxDepth),
+        jagged: spring(this.state.jagged ? 1 : 0),
+      },
     });
 
     return styles;
   }
 
   renderStyles = (styles) => {
-    const { maxDepth } = styles.pop().style;
+    const { maxDepth, jagged } = styles.pop().style;
 
     return (
       <Sunburst
@@ -120,6 +128,7 @@ export default class App extends React.Component {
           ...style,
         }))}
         maxDepth={maxDepth}
+        jagged={jagged}
         width={960}
         height={700}
       />
@@ -134,6 +143,9 @@ export default class App extends React.Component {
         </button>
         <button onClick={this.onClickChangeMeasure}>
           Change measure
+        </button>
+        <button onClick={this.onClickToggleJagged}>
+          Toggle jagged
         </button>
 
         <svg width={960} height={700}>
