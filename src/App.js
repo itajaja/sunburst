@@ -38,6 +38,7 @@ export default class App extends React.Component {
     jagged: false,
     highlightedKey: null,
     activeNode: null,
+    maxDepth: 4,
   };
 
   getChildContext() {
@@ -60,6 +61,14 @@ export default class App extends React.Component {
 
   onClickResetRoot = () => {
     this.setActiveNode(null);
+  };
+
+  onClickIncreaseDepth = () => {
+    this.setState({ maxDepth: this.state.maxDepth + 1 });
+  };
+
+  onClickDecreaseDepth = () => {
+    this.setState({ maxDepth: Math.max(this.state.maxDepth - 1, 1) });
   };
 
   getData() {
@@ -129,12 +138,12 @@ export default class App extends React.Component {
         fade,
       }));
 
-    return { nodes, maxDepth: root.height };
+    return { nodes };
   }
 
   getStyles = (prevInterpolatedStyles) => {
-    const { jagged, activeNode } = this.state;
-    const { nodes, maxDepth } = this.getData();
+    const { jagged, activeNode, maxDepth } = this.state;
+    const { nodes } = this.getData();
 
     const styles = nodes.map(node => ({
       key: node.key.toString(),
@@ -175,7 +184,7 @@ export default class App extends React.Component {
         minX: spring(minX, { precision: xPrecision }),
         maxX: spring(maxX, { precision: xPrecision }),
         minDepth: spring(minDepth),
-        maxDepth: spring(maxDepth),
+        maxDepth: spring(minDepth + maxDepth),
         jagged: spring(jagged ? 1 : 0),
       },
     });
@@ -221,6 +230,12 @@ export default class App extends React.Component {
         </button>
         <button onClick={this.onClickResetRoot}>
           Reset root
+        </button>
+        <button onClick={this.onClickIncreaseDepth}>
+          Increase Depth
+        </button>
+        <button onClick={this.onClickDecreaseDepth}>
+          Decrease Depth
         </button>
 
         <svg width={960} height={700}>
