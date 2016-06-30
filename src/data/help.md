@@ -1,10 +1,10 @@
-# data format
+# Data format
 
 The format is `NUM_READS\tTAXONOMY_ID\tTAXONOMY_LINEAGE`
 
-`NUM_READS` represent the specifc number of read that has that taxonomy as the most specific identification. This means that a spacific taxonomy overall contains `NUM_READS` reads plus the sum of all the `NUM_READS` of its descendants.
+`NUM_READS` represent the specific number of reads that have that taxonomy as the most specific identification. This means that a specific taxonomy overall contains `NUM_READS` reads plus the sum of all the `NUM_READS` of its descendants.
 
-example:
+Example:
 
 ```
 0 1 A
@@ -12,4 +12,4 @@ example:
 7 3 A;B;C
 ```
 
-means that there are 9 reads in taxum A, all of them in taxum B, 7 of which are in taxum C and the remaining not further specified.
+This means that there are 9 reads in taxon A, all of them in taxon B, 7 of which are in taxon C and the remaining not further specified.
