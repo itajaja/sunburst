@@ -20,6 +20,8 @@ const DATASETS = [d9, d0, d1, d2, d3, d4, d5, d6, d7, d8];
 const ROOT_ID = '@@root';
 const PLOT_KEY = '@@plot';
 
+const FADE_SPRING_CONFIG = { stiffness: 300, damping: 28 };
+
 const stratifier = stratify()
   .parentId(({ id }) => (
     id === ROOT_ID ? null : id.substring(0, id.lastIndexOf(';')) || ROOT_ID
@@ -139,7 +141,7 @@ export default class App extends React.Component {
       data: node,
       style: {
         value: spring(node.value),
-        fade: spring(node.fade ? 0.6 : 0),
+        fade: spring(node.fade ? 0.6 : 0, FADE_SPRING_CONFIG),
       },
     }));
 
