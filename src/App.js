@@ -20,6 +20,8 @@ const DATASETS = [d9, d0, d1, d2, d3, d4, d5, d6, d7, d8];
 const ROOT_ID = '@@root';
 const PLOT_KEY = '@@plot';
 
+const FADE_SPRING_CONFIG = { stiffness: 300, damping: 28 };
+
 const stratifier = stratify()
   .parentId(({ id }) => (
     id === ROOT_ID ? null : id.substring(0, id.lastIndexOf(';')) || ROOT_ID
@@ -130,7 +132,7 @@ export default class App extends React.Component {
     return { nodes, maxDepth: root.height };
   }
 
-  getStyles() {
+  getStyles = (prevInterpolatedStyles) => {
     const { jagged, activeNode } = this.state;
     const { nodes, maxDepth } = this.getData();
 
@@ -139,7 +141,7 @@ export default class App extends React.Component {
       data: node,
       style: {
         value: spring(node.value),
-        fade: spring(node.fade ? 0.6 : 0),
+        fade: spring(node.fade ? 0.6 : 0, FADE_SPRING_CONFIG),
       },
     }));
 
@@ -157,6 +159,14 @@ export default class App extends React.Component {
       minDepth = 0;
     }
 
+    if (prevInterpolatedStyles) {
+      const prevPlotStyle = prevInterpolatedStyles.pop().style;
+      if (Math.abs(minDepth - prevPlotStyle.minDepth) > 0.1) {
+        minX = prevPlotStyle.minX;
+        maxX = prevPlotStyle.maxX;
+      }
+    }
+
     const xPrecision = 0.01 * (maxX - minX);
 
     styles.push({
@@ -171,7 +181,7 @@ export default class App extends React.Component {
     });
 
     return styles;
-  }
+  };
 
   setHighlightedKey = (key) => {
     this.setState({ highlightedKey: key });
@@ -215,7 +225,7 @@ export default class App extends React.Component {
 
         <svg width={960} height={700}>
           <TransitionMotion
-            styles={this.getStyles()}
+            styles={this.getStyles}
             willLeave={() => ({
               value: spring(0),
               fade: spring(1),
