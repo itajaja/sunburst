@@ -26,11 +26,20 @@ const stratifier = stratify()
   ));
 
 export default class App extends React.Component {
+  static childContextTypes = {
+    app: React.PropTypes.object.isRequired,
+  };
+
   state = {
     datasetIndex: 0,
     useHasReads: false,
     jagged: false,
+    highlightedKey: null,
   };
+
+  getChildContext() {
+    return { app: this };
+  }
 
   onClickChangeDataset = () => {
     this.setState({
@@ -47,7 +56,7 @@ export default class App extends React.Component {
   };
 
   getData() {
-    const { datasetIndex, useHasReads } = this.state;
+    const { datasetIndex, useHasReads, highlightedKey } = this.state;
     const dataset = DATASETS[datasetIndex];
 
     const datasetParsed = dataset.map(([numReads, key, id]) => ({
@@ -87,12 +96,30 @@ export default class App extends React.Component {
       .sort((a, b) => (b.data.key - a.data.key))
       .sum(getValue);
 
+    if (highlightedKey !== null) {
+      let highlightedNode;
+
+      root.each(node => {
+        if (node.data.key === highlightedKey) {
+          highlightedNode = node;
+          return; // Pointless micro-optimization.
+        }
+
+        node.fade = true; // eslint-disable-line no-param-reassign
+      });
+
+      highlightedNode.each(node => {
+        node.fade = false; // eslint-disable-line no-param-reassign
+      });
+    }
+
     const nodes = root.descendants()
-      .map(({ id, data, parent, value }) => ({
+      .map(({ id, data, parent, value, fade }) => ({
         id,
         key: data.key,
         parentId: parent && parent.id,
         value,
+        fade,
       }));
 
     return { nodes, maxDepth: root.height };
@@ -104,7 +131,10 @@ export default class App extends React.Component {
     const styles = nodes.map(node => ({
       key: node.key.toString(),
       data: node,
-      style: { value: spring(node.value) },
+      style: {
+        value: spring(node.value),
+        fade: spring(node.fade ? 0.6 : 0),
+      },
     }));
 
     styles.push({
@@ -117,6 +147,10 @@ export default class App extends React.Component {
 
     return styles;
   }
+
+  setHighlightedKey = (key) => {
+    this.setState({ highlightedKey: key });
+  };
 
   renderStyles = (styles) => {
     const { maxDepth, jagged } = styles.pop().style;
@@ -151,8 +185,14 @@ export default class App extends React.Component {
         <svg width={960} height={700}>
           <TransitionMotion
             styles={this.getStyles()}
-            willLeave={() => ({ value: spring(0) })}
-            willEnter={() => ({ value: 0 })}
+            willLeave={() => ({
+              value: spring(0),
+              fade: spring(1),
+            })}
+            willEnter={() => ({
+              value: 0,
+              fade: 1,
+            })}
           >
             {this.renderStyles}
           </TransitionMotion>

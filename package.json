@@ -6,6 +6,7 @@
     "start": "NODE_ENV=production npm run dev-server"
   },
   "dependencies": {
+    "color": "^0.11.3",
     "d3-hierarchy": "^1.0.0",
     "d3-scale": "^1.0.0",
     "d3-shape": "^1.0.0",
