@@ -38,7 +38,7 @@ export default class App extends React.Component {
     jagged: false,
     highlightedKey: null,
     activeNode: null,
-    maxDepth: 4,
+    depthLevel: 4,
   };
 
   getChildContext() {
@@ -64,11 +64,11 @@ export default class App extends React.Component {
   };
 
   onClickIncreaseDepth = () => {
-    this.setState({ maxDepth: this.state.maxDepth + 1 });
+    this.setState({ depthLevel: this.state.depthLevel + 1 });
   };
 
   onClickDecreaseDepth = () => {
-    this.setState({ maxDepth: Math.max(this.state.maxDepth - 1, 1) });
+    this.setState({ depthLevel: Math.max(this.state.depthLevel - 1, 1) });
   };
 
   getData() {
@@ -138,12 +138,12 @@ export default class App extends React.Component {
         fade,
       }));
 
-    return { nodes, maxDepth: Math.min(root.height, this.state.maxDepth) };
+    return { nodes, rootHeight: root.height };
   }
 
   getStyles = (prevInterpolatedStyles) => {
-    const { jagged, activeNode } = this.state;
-    const { nodes, maxDepth } = this.getData();
+    const { jagged, activeNode, depthLevel } = this.state;
+    const { nodes, rootHeight } = this.getData();
 
     const styles = nodes.map(node => ({
       key: node.key.toString(),
@@ -157,15 +157,18 @@ export default class App extends React.Component {
     let minX;
     let maxX;
     let minDepth;
+    let height;
 
     if (activeNode) {
       minX = activeNode.x0;
       maxX = activeNode.x1;
       minDepth = activeNode.depth;
+      height = activeNode.height;
     } else {
       minX = 0;
       maxX = 1;
       minDepth = 0;
+      height = rootHeight;
     }
 
     if (prevInterpolatedStyles) {
@@ -184,7 +187,7 @@ export default class App extends React.Component {
         minX: spring(minX, { precision: xPrecision }),
         maxX: spring(maxX, { precision: xPrecision }),
         minDepth: spring(minDepth),
-        maxDepth: spring(minDepth + maxDepth),
+        maxDepth: spring(minDepth + Math.min(depthLevel, height)),
         jagged: spring(jagged ? 1 : 0),
       },
     });
