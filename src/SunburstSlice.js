@@ -26,6 +26,10 @@ export default class SunburstSlice extends React.Component {
     this.context.app.setHighlightedKey(null);
   };
 
+  onClick = () => {
+    this.context.app.setActiveNode(this.props.node);
+  };
+
   render() {
     const { radiusScale, angleScale, fillScale, node, jagged } = this.props;
     const { x0, x1, depth, data, children } = node;
@@ -60,6 +64,7 @@ export default class SunburstSlice extends React.Component {
         stroke="white"
         onMouseEnter={this.onMouseEnter}
         onMouseLeave={this.onMouseLeave}
+        onClick={this.onClick}
       />
     );
 

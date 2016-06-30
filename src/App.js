@@ -35,6 +35,7 @@ export default class App extends React.Component {
     useHasReads: false,
     jagged: false,
     highlightedKey: null,
+    activeNode: null,
   };
 
   getChildContext() {
@@ -53,6 +54,10 @@ export default class App extends React.Component {
 
   onClickToggleJagged = () => {
     this.setState({ jagged: !this.state.jagged });
+  };
+
+  onClickResetRoot = () => {
+    this.setActiveNode(null);
   };
 
   getData() {
@@ -126,6 +131,7 @@ export default class App extends React.Component {
   }
 
   getStyles() {
+    const { jagged, activeNode } = this.state;
     const { nodes, maxDepth } = this.getData();
 
     const styles = nodes.map(node => ({
@@ -137,11 +143,30 @@ export default class App extends React.Component {
       },
     }));
 
+    let minX;
+    let maxX;
+    let minDepth;
+
+    if (activeNode) {
+      minX = activeNode.x0;
+      maxX = activeNode.x1;
+      minDepth = activeNode.depth;
+    } else {
+      minX = 0;
+      maxX = 1;
+      minDepth = 0;
+    }
+
+    const xPrecision = 0.01 * (maxX - minX);
+
     styles.push({
       key: PLOT_KEY,
       style: {
+        minX: spring(minX, { precision: xPrecision }),
+        maxX: spring(maxX, { precision: xPrecision }),
+        minDepth: spring(minDepth),
         maxDepth: spring(maxDepth),
-        jagged: spring(this.state.jagged ? 1 : 0),
+        jagged: spring(jagged ? 1 : 0),
       },
     });
 
@@ -152,17 +177,20 @@ export default class App extends React.Component {
     this.setState({ highlightedKey: key });
   };
 
+  setActiveNode = (node) => {
+    this.setState({ activeNode: node });
+  };
+
   renderStyles = (styles) => {
-    const { maxDepth, jagged } = styles.pop().style;
+    const plotStyle = styles.pop().style;
 
     return (
       <Sunburst
+        {...plotStyle}
         nodes={styles.map(({ data, style }) => ({
           ...data,
           ...style,
         }))}
-        maxDepth={maxDepth}
-        jagged={jagged}
         width={960}
         height={700}
       />
@@ -180,6 +208,9 @@ export default class App extends React.Component {
         </button>
         <button onClick={this.onClickToggleJagged}>
           Toggle jagged
+        </button>
+        <button onClick={this.onClickResetRoot}>
+          Reset root
         </button>
 
         <svg width={960} height={700}>
