@@ -132,7 +132,7 @@ export default class App extends React.Component {
     return { nodes, maxDepth: root.height };
   }
 
-  getStyles() {
+  getStyles = (prevInterpolatedStyles) => {
     const { jagged, activeNode } = this.state;
     const { nodes, maxDepth } = this.getData();
 
@@ -159,6 +159,14 @@ export default class App extends React.Component {
       minDepth = 0;
     }
 
+    if (prevInterpolatedStyles) {
+      const prevPlotStyle = prevInterpolatedStyles.pop().style;
+      if (Math.abs(minDepth - prevPlotStyle.minDepth) > 0.1) {
+        minX = prevPlotStyle.minX;
+        maxX = prevPlotStyle.maxX;
+      }
+    }
+
     const xPrecision = 0.01 * (maxX - minX);
 
     styles.push({
@@ -173,7 +181,7 @@ export default class App extends React.Component {
     });
 
     return styles;
-  }
+  };
 
   setHighlightedKey = (key) => {
     this.setState({ highlightedKey: key });
@@ -217,7 +225,7 @@ export default class App extends React.Component {
 
         <svg width={960} height={700}>
           <TransitionMotion
-            styles={this.getStyles()}
+            styles={this.getStyles}
             willLeave={() => ({
               value: spring(0),
               fade: spring(1),
