@@ -38,6 +38,7 @@ export default class App extends React.Component {
     jagged: false,
     highlightedKey: null,
     activeNode: null,
+    depthLevel: 4,
   };
 
   getChildContext() {
@@ -60,6 +61,14 @@ export default class App extends React.Component {
 
   onClickResetRoot = () => {
     this.setActiveNode(null);
+  };
+
+  onClickIncreaseDepth = () => {
+    this.setState({ depthLevel: this.state.depthLevel + 1 });
+  };
+
+  onClickDecreaseDepth = () => {
+    this.setState({ depthLevel: Math.max(this.state.depthLevel - 1, 1) });
   };
 
   getData() {
@@ -129,12 +138,12 @@ export default class App extends React.Component {
         fade,
       }));
 
-    return { nodes, maxDepth: root.height };
+    return { nodes, rootHeight: root.height };
   }
 
   getStyles = (prevInterpolatedStyles) => {
-    const { jagged, activeNode } = this.state;
-    const { nodes, maxDepth } = this.getData();
+    const { jagged, activeNode, depthLevel } = this.state;
+    const { nodes, rootHeight } = this.getData();
 
     const styles = nodes.map(node => ({
       key: node.key.toString(),
@@ -148,15 +157,18 @@ export default class App extends React.Component {
     let minX;
     let maxX;
     let minDepth;
+    let height;
 
     if (activeNode) {
       minX = activeNode.x0;
       maxX = activeNode.x1;
       minDepth = activeNode.depth;
+      height = activeNode.height;
     } else {
       minX = 0;
       maxX = 1;
       minDepth = 0;
+      height = rootHeight;
     }
 
     if (prevInterpolatedStyles) {
@@ -175,7 +187,7 @@ export default class App extends React.Component {
         minX: spring(minX, { precision: xPrecision }),
         maxX: spring(maxX, { precision: xPrecision }),
         minDepth: spring(minDepth),
-        maxDepth: spring(maxDepth),
+        maxDepth: spring(minDepth + Math.min(depthLevel, height)),
         jagged: spring(jagged ? 1 : 0),
       },
     });
@@ -221,6 +233,12 @@ export default class App extends React.Component {
         </button>
         <button onClick={this.onClickResetRoot}>
           Reset root
+        </button>
+        <button onClick={this.onClickIncreaseDepth}>
+          Increase Depth
+        </button>
+        <button onClick={this.onClickDecreaseDepth}>
+          Decrease Depth
         </button>
 
         <svg width={960} height={700}>
